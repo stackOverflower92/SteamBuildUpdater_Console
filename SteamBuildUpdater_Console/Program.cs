@@ -8,10 +8,10 @@ namespace SteamBuildUpdaterConsole
 {
 	public class Settings
 	{
-		public string steamContentFolder;
-		public string projectBuildFolder;
-		public string steamBuildBatFileFolder;
-		public string steamBuildBatFile;
+		public string m_sSteamContentFolder;
+		public string m_sProjectBuildFolder;
+		public string m_sSteamBuildBatFileFolder;
+		public string m_sSteamBuildBatFile;
 	}
 
 	class Program
@@ -24,15 +24,19 @@ namespace SteamBuildUpdaterConsole
 		private static void CopyAllFiles(string sourceDir, string targetDir)
 		{
 			foreach (var file in Directory.GetFiles(sourceDir))
+			{
 				File.Copy(file, Path.Combine(targetDir, Path.GetFileName(file)));
+			}
 
 			foreach (var directory in Directory.GetDirectories(sourceDir))
+			{
 				CopyAllFiles(directory, Path.Combine(targetDir, Path.GetFileName(directory)));
+			}
 		}
 
 		private static void DeleteAllFiles(string targetDir)
 		{
-			System.IO.DirectoryInfo di = new DirectoryInfo(targetDir);
+			DirectoryInfo di = new DirectoryInfo(targetDir);
 
 			foreach (FileInfo file in di.GetFiles())
 			{
@@ -58,23 +62,23 @@ namespace SteamBuildUpdaterConsole
 
 		static void Main(string[] args)
 		{
-			Console.WriteLine("Insert project name\n>");
+			Utils.Log("Insert project name\n>");
 			var projectName = Console.ReadLine();
 
-			Console.WriteLine("Reading settings file...");
+			Utils.Log("Reading settings file...");
 
 			string fileContent;
 			try
 			{
 				var fileName = @"\" + projectName + ".json";
 				var location = MyDirectory() + fileName;
-				Console.WriteLine(location);
+				Utils.Log(location);
 
 				fileContent = File.ReadAllText(location);
 			}
 			catch (IOException e)
 			{
-				Console.WriteLine("[ERROR] There is no settings file associated to that project.");
+				Utils.Log("There is no settings file associated to that project.", Utils.ELogType.Error);
 				Console.Read();
 
 				return;
@@ -82,16 +86,16 @@ namespace SteamBuildUpdaterConsole
 
 			var readSettings = JsonConvert.DeserializeObject<Settings>(fileContent);
 
-			Console.WriteLine("File read successfully");
+			Utils.Log("File read successfully");
 		
-			DeleteAllFiles(readSettings.steamContentFolder);
-			Console.WriteLine("Old content deleted successfully");
+			DeleteAllFiles(readSettings.m_sSteamContentFolder);
+			Utils.Log("Old content deleted successfully");
 
-			CopyAllFiles(readSettings.projectBuildFolder, readSettings.steamContentFolder);
-			Console.WriteLine("New files copied successfully");
+			CopyAllFiles(readSettings.m_sProjectBuildFolder, readSettings.m_sSteamContentFolder);
+			Utils.Log("New files copied successfully");
 
-			ExecuteBatFile(readSettings.steamBuildBatFileFolder, readSettings.steamBuildBatFile);
-			Console.WriteLine("Batch file process terminated. Press any key to exit...");
+			ExecuteBatFile(readSettings.m_sSteamBuildBatFileFolder, readSettings.m_sSteamBuildBatFile);
+			Utils.Log("Batch file process terminated. Press any key to exit...");
 
 			Console.Read();
 		}
